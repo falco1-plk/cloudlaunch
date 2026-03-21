@@ -9,9 +9,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v1
       with:
@@ -19,10 +16,8 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         script: |
-          cd ~
-          rm -rf cloudlaunch
-          git clone https://github.com/falco1-plk/cloudlaunch.git
           cd cloudlaunch
+          git pull
           docker stop cloudlaunch || true
           docker rm cloudlaunch || true
           docker build -t cloudlaunch-app .
