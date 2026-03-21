@@ -4,9 +4,9 @@ const PORT = 3000;
 
 const server = http.createServer((req, res) => {
     res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(`
-  <h1>CloudLaunch CI/CD Auto Deployment 🚀</h1>
-  <p>Updated automatically from GitHub</p>
+   res.end(`
+  <h1>CloudLaunch FINAL DEMO 🚀</h1>
+  <p>Auto deployment working successfully</p>
 `);
 });
 
