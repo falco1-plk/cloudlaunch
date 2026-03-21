@@ -16,9 +16,17 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         script: |
+          cd ~
+          
+          if [ ! -d "cloudlaunch" ]; then
+            git clone https://github.com/falco1-plk/cloudlaunch.git
+          fi
+          
           cd cloudlaunch
           git pull
+          
           docker stop cloudlaunch || true
           docker rm cloudlaunch || true
+          
           docker build -t cloudlaunch-app .
           docker run -d -p 3000:3000 --name cloudlaunch cloudlaunch-app
