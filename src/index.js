@@ -75,28 +75,28 @@ const server = http.createServer((req, res) => {
 
     <body>
 
-    <h1>🚀 CloudLaunch CI/CD Pipeline</h1>
+    <h1> CloudLaunch CI/CD Pipeline</h1>
 
     <div class="container">
 
-      <h2>👨‍💻 Project Details</h2>
+      <h2>👨 Project Details</h2>
 
-      <p><b>Student Name:</b> YOUR NAME</p>
-      <p><b>Registration No:</b> YOUR REG NO</p>
+      <p><b>Student Name:</b> AISHWARY JAISWAL</p>
+      <p><b>Registration No:</b> 24BSA10135</p>
 
       <div class="team">
-        <h3>👥 Team Members</h3>
+        <h3>Team Members</h3>
 
-        <p>1. MEMBER 1 NAME (Reg No)</p>
-        <p>2. MEMBER 2 NAME (Reg No)</p>
-        <p>3. MEMBER 3 NAME (Reg No)</p>
-        <p>4. MEMBER 4 NAME (Reg No)</p>
-        <p>5. MEMBER 5 NAME (Reg No)</p>
+        <p>1. MEMBER 1 NAJ (Reg No)</p>
+        <p>2. MEMBER 2 AK (Reg No)</p>
+        <p>3. MEMBER 3 KK (Reg No)</p>
+        <p>4. MEMBER 4 OP (Reg No)</p>
+        <p>5. MEMBER 5 NAMA (Reg No)</p>
 
       </div>
 
       <div class="footer">
-        ✅ Auto Deployment Working Successfully!
+        Auto Deployment Working Successfully
       </div>
 
     </div>
