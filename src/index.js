@@ -79,7 +79,7 @@ const server = http.createServer((req, res) => {
 
     <div class="container">
 
-      <h2>👨 Project Details</h2>
+      <h2>Project Details</h2>
 
       <p><b>Student Name:</b> AISHWARY JAISWAL</p>
       <p><b>Registration No:</b> 24BSA10135</p>
