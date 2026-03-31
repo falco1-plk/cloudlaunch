@@ -87,7 +87,7 @@ const server = http.createServer((req, res) => {
       <div class="team">
         <h3>Team Members</h3>
 
-        <p>1. MEMBER 1 NAJ (Reg No)</p>
+        <p>1. MEMBER 1 yash (Reg No)</p>
         <p>2. MEMBER 2 AK (Reg No)</p>
         <p>3. MEMBER 3 KK (Reg No)</p>
         <p>4. MEMBER 4 OP (Reg No)</p>
