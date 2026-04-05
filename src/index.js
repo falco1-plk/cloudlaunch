@@ -1,111 +1,242 @@
 const http = require('http');
 
-const PORT = 3000;
-
 const server = http.createServer((req, res) => {
-    
-    res.writeHead(200, { 'Content-Type': 'text/html' });
 
-    res.end(`
-    <html>
-    <head>
-    <title>CloudLaunch CI/CD</title>
+  res.writeHead(200, { 'Content-Type': 'text/html' });
 
-    <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: white;
-      text-align: center;
+  res.end(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CloudLaunch DevOps Monitor</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: white;
+  text-align: center;
+  overflow-x: hidden;
+}
+
+/* Animated Background */
+body::before {
+  content: "";
+  position: fixed;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(0,255,255,0.08), transparent);
+  animation: moveBg 12s linear infinite;
+}
+
+@keyframes moveBg {
+  0% { transform: translate(0,0); }
+  50% { transform: translate(-200px,-200px); }
+  100% { transform: translate(0,0); }
+}
+
+h1 {
+  margin-top: 20px;
+  font-size: 40px;
+  color: #00f2ff;
+  text-shadow: 0 0 20px #00f2ff;
+}
+
+.container {
+  width: 85%;
+  margin: auto;
+  padding: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.card {
+  background: rgba(255,255,255,0.08);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 0 25px rgba(0,255,255,0.2);
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 35px rgba(0,255,255,0.4);
+}
+
+.card h2 {
+  color: #00ffcc;
+}
+
+.status {
+  font-size: 18px;
+  color: #00ffcc;
+}
+
+.version {
+  color: #ffd700;
+}
+
+.chart-container {
+  background: #000;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+/* GitHub card styling */
+.github-box {
+  font-size: 14px;
+  text-align: left;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+.footer {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #00ffcc;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>🚀 CloudLaunch DevOps Monitor</h1>
+
+<div class="container">
+
+<div class="grid">
+
+<div class="card">
+  <h2>👨‍💻 Developer</h2>
+  <p><b>Name:</b> Aishwary</p>
+  <p><b>Reg No:</b> YOUR REG NO</p>
+</div>
+
+<div class="card">
+  <h2>🌐 CI/CD Status</h2>
+  <p class="status">🟢 Pipeline Running Successfully</p>
+  <p class="version">Version: v2.2</p>
+</div>
+
+<div class="card">
+  <h2>📊 CPU Usage</h2>
+  <div class="chart-container">
+    <canvas id="cpuChart"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📊 Memory Usage</h2>
+  <div class="chart-container">
+    <canvas id="memChart"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📊 Requests/sec</h2>
+  <div class="chart-container">
+    <canvas id="reqChart"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📡 GitHub Live Status</h2>
+  <div class="github-box">
+    <p><b>Commit:</b> <span id="commitMsg">Loading...</span></p>
+    <p><b>Author:</b> <span id="falco1-plk"></span></p>
+    <p><b>Time:</b> <span id="time"></span></p>
+  </div>
+</div>
+
+</div>
+
+<div class="footer">
+  ⚡ Real-Time Monitoring + Live CI/CD Active
+</div>
+
+</div>
+
+<script>
+// ===== Charts =====
+function createChart(id) {
+  const ctx = document.getElementById(id).getContext('2d');
+
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: Array(10).fill(""),
+      datasets: [{
+        data: Array(10).fill(50),
+        borderColor: '#00ffcc',
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { min: 0, max: 100 }
+      },
+      plugins: {
+        legend: { display: false }
+      }
     }
+  });
+}
 
-    h1 {
-      margin-top: 40px;
-      font-size: 42px;
-      animation: glow 2s infinite alternate;
-    }
+const cpuChart = createChart("cpuChart");
+const memChart = createChart("memChart");
+const reqChart = createChart("reqChart");
 
-    .container {
-      margin: 40px auto;
-      width: 60%;
-      padding: 30px;
-      border-radius: 15px;
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      animation: fadeIn 2s ease-in-out;
-    }
+function updateChart(chart) {
+  chart.data.datasets[0].data.shift();
+  chart.data.datasets[0].data.push(Math.floor(Math.random() * 100));
+  chart.update();
+}
 
-    .team {
-      margin-top: 20px;
-      text-align: left;
-      padding: 15px;
-    }
+setInterval(() => {
+  updateChart(cpuChart);
+  updateChart(memChart);
+  updateChart(reqChart);
+}, 2000);
 
-    .team p {
-      font-size: 18px;
-      margin: 5px 0;
-    }
+// ===== GitHub API =====
+async function loadGitHubData() {
+  try {
+    const res = await fetch("https://api.github.com/repos/http://falco1-plk/https://github.com/falco1-plk/cloudlaunch.git/commits?per_page=1");
+    const data = await res.json();
 
-    .footer {
-      margin-top: 30px;
-      font-size: 18px;
-      color: #00ffcc;
-      animation: blink 1.5s infinite;
-    }
+    const latest = data[0];
 
-    @keyframes glow {
-      from { text-shadow: 0 0 10px #00f2ff; }
-      to { text-shadow: 0 0 25px #00f2ff, 0 0 40px #00f2ff; }
-    }
+    document.getElementById("commitMsg").innerText = latest.commit.message;
+    document.getElementById("author").innerText = latest.commit.author.name;
+    document.getElementById("time").innerText =
+      new Date(latest.commit.author.date).toLocaleString();
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(40px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+  } catch (err) {
+    document.getElementById("commitMsg").innerText = "Unable to load";
+  }
+}
 
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0.4; }
-      100% { opacity: 1; }
-    }
-    </style>
-    </head>
+loadGitHubData();
+setInterval(loadGitHubData, 10000);
 
-    <body>
+</script>
 
-    <h1> CloudLaunch CI/CD Pipeline</h1>
+</body>
+</html>
+`);
 
-    <div class="container">
-
-      <h2>Project Details</h2>
-
-      <p><b>Student Name:</b> AISHWARY JAISWAL</p>
-      <p><b>Registration No:</b> 24BSA10135</p>
-
-      <div class="team">
-        <h3>Team Members</h3>
-
-        <p>1. MEMBER 1 yash (Reg No)</p>
-        <p>2. MEMBER 2 rakshit (Reg No)</p>
-        <p>3. MEMBER 3 KK (Reg No)</p>
-        <p>4. MEMBER 4 OP (Reg No)</p>
-        <p>5. MEMBER 5 NAMA (Reg No)</p>
-
-      </div>
-
-      <div class="footer">
-        Auto Deployment Working Successfully
-      </div>
-
-    </div>
-
-    </body>
-    </html>
-    `);
 });
 
-server.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+server.listen(3000, () => {
+  console.log("🔥 Server running at http://localhost:3000");
 });
