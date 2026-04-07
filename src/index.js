@@ -113,17 +113,6 @@ const server = http.createServer((req, res) => {
       color: white;
       font-size: 16px;
       cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      transform: scale(1.1);
-      box-shadow: 0 0 15px cyan;
-    }
-
-    #status {
-      margin-top: 20px;
-      font-size: 18px;
     }
 
     #log {
@@ -171,7 +160,7 @@ const server = http.createServer((req, res) => {
 
   // ---------- STATUS ----------
   if (req.url === "/status") {
-    exec("docker ps -q", (err, stdout) => {
+    exec("docker ps --filter name=cloudlaunch-app -q", (err, stdout) => {
       if (stdout.trim()) {
         res.end("Running");
       } else {
@@ -181,24 +170,30 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // ---------- ACTIONS ----------
+  // ---------- FIXED ACTIONS (IMPORTANT) ----------
+
   if (req.url === "/stop") {
-    exec("docker stop $(docker ps -q)", () => {});
-    return res.end("❌ Server Stopped");
+    exec("docker stop cloudlaunch-app", () => {});
+    return res.end("❌ App Stopped");
   }
 
   if (req.url === "/start") {
-    exec("docker start $(docker ps -aq)", () => {});
-    return res.end("✅ Server Started");
+    exec("docker start cloudlaunch-app", () => {});
+    return res.end("✅ App Started");
   }
 
   if (req.url === "/restart") {
-    exec("docker restart $(docker ps -q)", () => {});
-    return res.end("🔄 Server Restarted");
+    exec("docker restart cloudlaunch-app", () => {});
+    return res.end("🔄 App Restarted");
   }
 
   if (req.url === "/deploy") {
-    exec("git pull && docker stop $(docker ps -q) && docker rm $(docker ps -aq) && docker build -t cloudlaunch . && docker run -d -p 3000:3000 cloudlaunch", () => {});
+    exec(`
+      docker stop cloudlaunch-app &&
+      docker rm cloudlaunch-app &&
+      docker build -t cloudlaunch . &&
+      docker run -d --name cloudlaunch-app -p 3000:3000 cloudlaunch
+    `, () => {});
     return res.end("🚀 Deployment Done");
   }
 
@@ -238,7 +233,6 @@ const server = http.createServer((req, res) => {
     background: rgba(255,255,255,0.1);
     padding:20px;
     border-radius:15px;
-    backdrop-filter: blur(10px);
   }
 
   canvas {
@@ -252,8 +246,6 @@ const server = http.createServer((req, res) => {
   <body>
 
   <header>🚀 CloudLaunch DevOps Monitor</header>
-
-  <h3 style="text-align:center;color:#00ffcc;">📊 LIVE MONITORING DASHBOARD</h3>
 
   <div class="grid">
 
@@ -324,6 +316,7 @@ const server = http.createServer((req, res) => {
 
 });
 
-server.listen(3000, () => {
-  console.log("🔥 Running on port 3000");
+// 👉 IMPORTANT: ADMIN RUNS ON DIFFERENT PORT
+server.listen(4000, () => {
+  console.log("🔥 Admin running on port 4000");
 });
