@@ -1,235 +1,199 @@
 const http = require('http');
+const { exec } = require('child_process');
 
 const server = http.createServer((req, res) => {
 
-  res.writeHead(200, { 'Content-Type': 'text/html' });
+  // ---------- ADMIN PANEL ----------
+  if (req.url === "/admin") {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    return res.end(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <title>Admin Panel</title>
+
+    <style>
+    body {
+      font-family: 'Segoe UI';
+      background: linear-gradient(135deg,#eef2ff,#e0f7fa);
+      text-align:center;
+      padding:50px;
+    }
+
+    h1 { color:#4f46e5; }
+
+    button {
+      padding:15px 25px;
+      margin:10px;
+      border:none;
+      background:#4f46e5;
+      color:white;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:16px;
+      transition:0.3s;
+    }
+
+    button:hover {
+      background:#4338ca;
+      transform:scale(1.05);
+    }
+
+    .status {
+      margin-top:20px;
+      font-size:18px;
+      color:#10b981;
+    }
+    </style>
+
+    </head>
+
+    <body>
+
+    <h1>🚀 DevOps Control Panel</h1>
+
+    <button onclick="action('/start')">▶ Start</button>
+    <button onclick="action('/stop')">⛔ Stop</button>
+    <button onclick="action('/restart')">🔄 Restart</button>
+    <button onclick="action('/deploy')">🚀 Deploy</button>
+
+    <p class="status" id="msg">Waiting for action...</p>
+
+    <script>
+    function action(route){
+      fetch(route)
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("msg").innerText = data;
+      });
+    }
+    </script>
+
+    </body>
+    </html>
+    `);
+  }
+
+  // ---------- STOP ----------
+  if (req.url === "/stop") {
+    exec("docker stop $(docker ps -q)", () => {});
+    return res.end("❌ Server Stopped");
+  }
+
+  // ---------- START ----------
+  if (req.url === "/start") {
+    exec("docker start $(docker ps -aq)", () => {});
+    return res.end("✅ Server Started");
+  }
+
+  // ---------- RESTART ----------
+  if (req.url === "/restart") {
+    exec("docker restart $(docker ps -q)", () => {});
+    return res.end("🔄 Server Restarted");
+  }
+
+  // ---------- DEPLOY ----------
+  if (req.url === "/deploy") {
+    exec("git pull && docker build -t cloudlaunch . && docker run -d -p 3000:3000 cloudlaunch", () => {});
+    return res.end("🚀 Deployment Triggered");
+  }
+
+  // ---------- MAIN DASHBOARD ----------
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
 
   res.end(`
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>CloudLaunch DevOps Monitor</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>CloudLaunch Dashboard</title>
 
 <style>
 body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  color: white;
-  text-align: center;
-  overflow-x: hidden;
+  margin:0;
+  font-family:'Segoe UI';
+  background: linear-gradient(135deg,#eef2ff,#e0f7fa);
 }
 
-/* Animated Background */
-body::before {
-  content: "";
-  position: fixed;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(0,255,255,0.08), transparent);
-  animation: moveBg 12s linear infinite;
-}
-
-@keyframes moveBg {
-  0% { transform: translate(0,0); }
-  50% { transform: translate(-200px,-200px); }
-  100% { transform: translate(0,0); }
-}
-
-h1 {
-  margin-top: 20px;
-  font-size: 40px;
-  color: #00f2ff;
-  text-shadow: 0 0 20px #00f2ff;
+header {
+  background:#4f46e5;
+  color:white;
+  padding:20px;
+  text-align:center;
+  font-size:28px;
 }
 
 .container {
-  width: 85%;
-  margin: auto;
-  padding: 20px;
+  width:90%;
+  margin:20px auto;
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
 }
 
 .card {
-  background: rgba(255,255,255,0.08);
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 0 25px rgba(0,255,255,0.2);
-  transition: 0.3s;
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.1);
+  transition:0.3s;
 }
 
 .card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 35px rgba(0,255,255,0.4);
-}
-
-.card h2 {
-  color: #00ffcc;
+  transform:translateY(-5px);
 }
 
 .status {
-  font-size: 18px;
-  color: #00ffcc;
+  color:#10b981;
+  font-weight:bold;
 }
 
-.version {
-  color: #ffd700;
-}
-
-.chart-container {
-  background: #000;
-  border-radius: 10px;
-  padding: 10px;
-}
-
-/* GitHub card styling */
-.github-box {
-  font-size: 14px;
-  text-align: left;
-  margin-top: 10px;
-  line-height: 1.6;
-}
-
-.footer {
-  margin-top: 20px;
-  font-size: 18px;
-  color: #00ffcc;
+.cpu {
+  font-size:24px;
+  color:#4f46e5;
 }
 </style>
+
+<script>
+setInterval(()=>{
+  document.getElementById("cpu").innerText =
+    Math.floor(Math.random()*100)+"%";
+},2000);
+</script>
 
 </head>
 
 <body>
 
-<h1>🚀 CloudLaunch DevOps Monitor</h1>
+<header>🚀 CloudLaunch DevOps Dashboard</header>
 
 <div class="container">
 
 <div class="grid">
 
 <div class="card">
-  <h2>👨‍💻 Developer</h2>
-  <p><b>Name:</b> Aishwary</p>
-  <p><b>Reg No:</b> YOUR REG NO</p>
+<h3>👨‍💻 Developer</h3>
+<p><b>Name:</b> Your Name</p>
+<p><b>Reg No:</b> Your Reg No</p>
 </div>
 
 <div class="card">
-  <h2>🌐 CI/CD Status</h2>
-  <p class="status">🟢 Pipeline Running Successfully</p>
-  <p class="version">Version: v2.2</p>
+<h3>🌐 Status</h3>
+<p class="status">🟢 Running</p>
 </div>
 
 <div class="card">
-  <h2>📊 CPU Usage</h2>
-  <div class="chart-container">
-    <canvas id="cpuChart"></canvas>
-  </div>
-</div>
-
-<div class="card">
-  <h2>📊 Memory Usage</h2>
-  <div class="chart-container">
-    <canvas id="memChart"></canvas>
-  </div>
-</div>
-
-<div class="card">
-  <h2>📊 Requests/sec</h2>
-  <div class="chart-container">
-    <canvas id="reqChart"></canvas>
-  </div>
-</div>
-
-<div class="card">
-  <h2>📡 GitHub Live Status</h2>
-  <div class="github-box">
-    <p><b>Commit:</b> <span id="commitMsg">Loading...</span></p>
-    <p><b>Author:</b> <span id="falco1-plk"></span></p>
-    <p><b>Time:</b> <span id="time"></span></p>
-  </div>
+<h3>📊 CPU Usage</h3>
+<p id="cpu" class="cpu">0%</p>
 </div>
 
 </div>
 
-<div class="footer">
-  ⚡ Real-Time Monitoring + Live CI/CD Active
 </div>
-
-</div>
-
-<script>
-// ===== Charts =====
-function createChart(id) {
-  const ctx = document.getElementById(id).getContext('2d');
-
-  return new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: Array(10).fill(""),
-      datasets: [{
-        data: Array(10).fill(50),
-        borderColor: '#00ffcc',
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { min: 0, max: 100 }
-      },
-      plugins: {
-        legend: { display: false }
-      }
-    }
-  });
-}
-
-const cpuChart = createChart("cpuChart");
-const memChart = createChart("memChart");
-const reqChart = createChart("reqChart");
-
-function updateChart(chart) {
-  chart.data.datasets[0].data.shift();
-  chart.data.datasets[0].data.push(Math.floor(Math.random() * 100));
-  chart.update();
-}
-
-setInterval(() => {
-  updateChart(cpuChart);
-  updateChart(memChart);
-  updateChart(reqChart);
-}, 2000);
-
-// ===== GitHub API =====
-async function loadGitHubData() {
-  try {
-    const res = await fetch("https://api.github.com/repos/http://falco1-plk/https://github.com/falco1-plk/cloudlaunch.git/commits?per_page=1");
-    const data = await res.json();
-
-    const latest = data[0];
-
-    document.getElementById("commitMsg").innerText = latest.commit.message;
-    document.getElementById("author").innerText = latest.commit.author.name;
-    document.getElementById("time").innerText =
-      new Date(latest.commit.author.date).toLocaleString();
-
-  } catch (err) {
-    document.getElementById("commitMsg").innerText = "Unable to load";
-  }
-}
-
-loadGitHubData();
-setInterval(loadGitHubData, 10000);
-
-</script>
 
 </body>
 </html>
