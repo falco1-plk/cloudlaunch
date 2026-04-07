@@ -51,7 +51,7 @@ const server = http.createServer((req, res) => {
 
     <body>
 
-    <h1>🚀 DevOps Control Panel</h1>
+    <h1>🚀 DevOps Control Panelv1.2</h1>
 
     <button onclick="action('/start')">▶ Start</button>
     <button onclick="action('/stop')">⛔ Stop</button>
