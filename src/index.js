@@ -1,49 +1,117 @@
 const http = require('http');
 const { exec } = require('child_process');
 
+let isLoggedIn = false;
+
 const server = http.createServer((req, res) => {
 
-  // ---------- ADMIN PANEL ----------
-  if (req.url === "/admin") {
+  // ---------- LOGIN ----------
+  if (req.url === "/login") {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     return res.end(`
-    <!DOCTYPE html>
     <html>
     <head>
     <meta charset="UTF-8">
-    <title>Admin Panel</title>
-
     <style>
     body {
       font-family: 'Segoe UI';
       background: linear-gradient(135deg,#eef2ff,#e0f7fa);
-      text-align:center;
-      padding:50px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
     }
-
-    h1 { color:#4f46e5; }
-
-    button {
-      padding:15px 25px;
+    .box {
+      background:white;
+      padding:30px;
+      border-radius:12px;
+      box-shadow:0 0 20px rgba(0,0,0,0.1);
+      text-align:center;
+    }
+    input {
+      padding:10px;
       margin:10px;
-      border:none;
+      width:200px;
+    }
+    button {
+      padding:10px 20px;
       background:#4f46e5;
       color:white;
+      border:none;
+      border-radius:8px;
+    }
+    </style>
+    </head>
+
+    <body>
+    <div class="box">
+      <h2>🔐 Admin Login</h2>
+      <form method="POST" action="/auth">
+        <input name="user" placeholder="Username"><br>
+        <input name="pass" type="password" placeholder="Password"><br>
+        <button>Login</button>
+      </form>
+    </div>
+    </body>
+    </html>
+    `);
+  }
+
+  // ---------- AUTH ----------
+  if (req.url === "/auth" && req.method === "POST") {
+    let body = "";
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      if (body.includes("admin") && body.includes("1234")) {
+        isLoggedIn = true;
+        res.writeHead(302, { Location: '/admin' });
+        res.end();
+      } else {
+        res.end("❌ Invalid Login");
+      }
+    });
+    return;
+  }
+
+  // ---------- ADMIN ----------
+  if (req.url === "/admin") {
+    if (!isLoggedIn) {
+      res.writeHead(302, { Location: '/login' });
+      return res.end();
+    }
+
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    return res.end(`
+    <html>
+    <head>
+    <meta charset="UTF-8">
+
+    <style>
+    body {
+      font-family: 'Segoe UI';
+      background:#f4f7fb;
+      text-align:center;
+      padding:40px;
+    }
+
+    button {
+      padding:15px;
+      margin:10px;
+      background:#4f46e5;
+      color:white;
+      border:none;
       border-radius:10px;
       cursor:pointer;
-      font-size:16px;
-      transition:0.3s;
     }
 
-    button:hover {
-      background:#4338ca;
-      transform:scale(1.05);
-    }
-
-    .status {
+    #log {
       margin-top:20px;
-      font-size:18px;
-      color:#10b981;
+      background:black;
+      color:lime;
+      padding:15px;
+      height:200px;
+      overflow:auto;
+      text-align:left;
     }
     </style>
 
@@ -51,23 +119,35 @@ const server = http.createServer((req, res) => {
 
     <body>
 
-    <h1>🚀 DevOps Control Panelv1.2</h1>
+    <h1>🚀 DevOps Control Panel</h1>
 
-    <button onclick="action('/start')">▶ Start</button>
-    <button onclick="action('/stop')">⛔ Stop</button>
-    <button onclick="action('/restart')">🔄 Restart</button>
-    <button onclick="action('/deploy')">🚀 Deploy</button>
+    <button onclick="run('/start')">▶ Start</button>
+    <button onclick="run('/stop')">⛔ Stop</button>
+    <button onclick="run('/restart')">🔄 Restart</button>
+    <button onclick="run('/deploy')">🚀 Deploy</button>
 
-    <p class="status" id="msg">Waiting for action...</p>
+    <h3>Status: <span id="status">Checking...</span></h3>
+
+    <div id="log">Logs will appear here...</div>
 
     <script>
-    function action(route){
+    function run(route){
+      document.getElementById("status").innerText="Processing...";
       fetch(route)
-      .then(res => res.text())
-      .then(data => {
-        document.getElementById("msg").innerText = data;
+      .then(res=>res.text())
+      .then(data=>{
+        document.getElementById("status").innerText=data;
+        document.getElementById("log").innerText += "\\n" + data;
       });
     }
+
+    setInterval(()=>{
+      fetch('/status')
+      .then(res=>res.text())
+      .then(data=>{
+        document.getElementById("status").innerText=data;
+      });
+    },3000);
     </script>
 
     </body>
@@ -75,132 +155,55 @@ const server = http.createServer((req, res) => {
     `);
   }
 
-  // ---------- STOP ----------
+  // ---------- STATUS ----------
+  if (req.url === "/status") {
+    exec("docker ps -q", (err, stdout) => {
+      if (stdout.trim()) {
+        res.end("🟢 Running");
+      } else {
+        res.end("🔴 Stopped");
+      }
+    });
+    return;
+  }
+
+  // ---------- ACTIONS ----------
   if (req.url === "/stop") {
     exec("docker stop $(docker ps -q)", () => {});
-    return res.end("❌ Server Stopped");
+    return res.end("❌ Stopped");
   }
 
-  // ---------- START ----------
   if (req.url === "/start") {
     exec("docker start $(docker ps -aq)", () => {});
-    return res.end("✅ Server Started");
+    return res.end("✅ Started");
   }
 
-  // ---------- RESTART ----------
   if (req.url === "/restart") {
     exec("docker restart $(docker ps -q)", () => {});
-    return res.end("🔄 Server Restarted");
+    return res.end("🔄 Restarted");
   }
 
-  // ---------- DEPLOY ----------
   if (req.url === "/deploy") {
     exec("git pull && docker build -t cloudlaunch . && docker run -d -p 3000:3000 cloudlaunch", () => {});
-    return res.end("🚀 Deployment Triggered");
+    return res.end("🚀 Deployed");
   }
 
-  // ---------- MAIN DASHBOARD ----------
+  // ---------- MAIN ----------
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
 
   res.end(`
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>CloudLaunch Dashboard</title>
-
-<style>
-body {
-  margin:0;
-  font-family:'Segoe UI';
-  background: linear-gradient(135deg,#eef2ff,#e0f7fa);
-}
-
-header {
-  background:#4f46e5;
-  color:white;
-  padding:20px;
-  text-align:center;
-  font-size:28px;
-}
-
-.container {
-  width:90%;
-  margin:20px auto;
-}
-
-.grid {
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:20px;
-}
-
-.card {
-  background:white;
-  padding:20px;
-  border-radius:12px;
-  box-shadow:0 4px 15px rgba(0,0,0,0.1);
-  transition:0.3s;
-}
-
-.card:hover {
-  transform:translateY(-5px);
-}
-
-.status {
-  color:#10b981;
-  font-weight:bold;
-}
-
-.cpu {
-  font-size:24px;
-  color:#4f46e5;
-}
-</style>
-
-<script>
-setInterval(()=>{
-  document.getElementById("cpu").innerText =
-    Math.floor(Math.random()*100)+"%";
-},2000);
-</script>
-
-</head>
-
-<body>
-
-<header>🚀 CloudLaunch DevOps Dashboard</header>
-
-<div class="container">
-
-<div class="grid">
-
-<div class="card">
-<h3>👨‍💻 Developer</h3>
-<p><b>Name:</b> Your Name</p>
-<p><b>Reg No:</b> Your Reg No</p>
-</div>
-
-<div class="card">
-<h3>🌐 Status</h3>
-<p class="status">🟢 Running</p>
-</div>
-
-<div class="card">
-<h3>📊 CPU Usage</h3>
-<p id="cpu" class="cpu">0%</p>
-</div>
-
-</div>
-
-</div>
-
-</body>
-</html>
-`);
+  <html>
+  <head><meta charset="UTF-8"></head>
+  <body style="text-align:center;font-family:sans-serif">
+  <h1>🚀 CloudLaunch DevOps App</h1>
+  <p>Live System Running</p>
+  <a href="/login">Go to Admin</a>
+  </body>
+  </html>
+  `);
 
 });
 
 server.listen(3000, () => {
-  console.log("🔥 Server running at http://localhost:3000");
+  console.log("🔥 Running on port 3000");
 });
