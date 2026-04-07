@@ -9,52 +9,158 @@ const server = http.createServer((req, res) => {
   if (req.url === "/login") {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     return res.end(`
-    <html>
-    <head>
-    <meta charset="UTF-8">
-    <style>
-    body {
-      font-family: 'Segoe UI';
-      background: linear-gradient(135deg,#eef2ff,#e0f7fa);
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-    }
-    .box {
-      background:white;
-      padding:30px;
-      border-radius:12px;
-      box-shadow:0 0 20px rgba(0,0,0,0.1);
-      text-align:center;
-    }
-    input {
-      padding:10px;
-      margin:10px;
-      width:200px;
-    }
-    button {
-      padding:10px 20px;
-      background:#4f46e5;
-      color:white;
-      border:none;
-      border-radius:8px;
-    }
-    </style>
-    </head>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>CloudLaunch DevOps</title>
 
-    <body>
-    <div class="box">
-      <h2>🔐 Admin Login</h2>
-      <form method="POST" action="/auth">
-        <input name="user" placeholder="Username"><br>
-        <input name="pass" type="password" placeholder="Password"><br>
-        <button>Login</button>
-      </form>
-    </div>
-    </body>
-    </html>
-    `);
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  margin:0;
+  font-family:'Segoe UI';
+  background: linear-gradient(270deg,#0f2027,#203a43,#2c5364);
+  background-size: 600% 600%;
+  animation: bgMove 10s ease infinite;
+  color:white;
+}
+
+@keyframes bgMove {
+  0% {background-position:0% 50%;}
+  50% {background-position:100% 50%;}
+  100% {background-position:0% 50%;}
+}
+
+header {
+  text-align:center;
+  padding:20px;
+  font-size:32px;
+  font-weight:bold;
+  text-shadow:0 0 10px cyan;
+}
+
+.container {
+  width:90%;
+  margin:auto;
+}
+
+.grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:20px;
+}
+
+.card {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  border-radius:15px;
+  padding:20px;
+  box-shadow:0 0 20px rgba(0,255,255,0.2);
+  transition:0.3s;
+}
+
+.card:hover {
+  transform:scale(1.03);
+  box-shadow:0 0 30px cyan;
+}
+
+.status {
+  font-size:20px;
+  color:#00ffcc;
+}
+
+canvas {
+  background:black;
+  border-radius:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<header>🚀 CloudLaunch DevOps Monitor</header>
+
+<div class="container">
+
+<div class="grid">
+
+<div class="card">
+<h2>👨‍💻 Developer</h2>
+<p>Name: Aishwary</p>
+<p>Reg No: YOUR REG NO</p>
+</div>
+
+<div class="card">
+<h2>🌐 System Status</h2>
+<p class="status" id="status">Checking...</p>
+</div>
+
+<div class="card">
+<h2>📊 CPU Usage</h2>
+<canvas id="cpuChart"></canvas>
+</div>
+
+<div class="card">
+<h2>📊 Memory Usage</h2>
+<canvas id="memChart"></canvas>
+</div>
+
+</div>
+
+</div>
+
+<script>
+const cpu = new Chart(document.getElementById("cpuChart"), {
+  type: 'line',
+  data: {
+    labels: Array(10).fill(""),
+    datasets: [{
+      data: Array(10).fill(50),
+      borderColor: '#00ffcc',
+      tension: 0.4
+    }]
+  },
+  options:{plugins:{legend:{display:false}}}
+});
+
+const mem = new Chart(document.getElementById("memChart"), {
+  type: 'line',
+  data: {
+    labels: Array(10).fill(""),
+    datasets: [{
+      data: Array(10).fill(30),
+      borderColor: '#ffcc00',
+      tension: 0.4
+    }]
+  },
+  options:{plugins:{legend:{display:false}}}
+});
+
+function update(chart){
+  chart.data.datasets[0].data.shift();
+  chart.data.datasets[0].data.push(Math.random()*100);
+  chart.update();
+}
+
+setInterval(()=>{
+  update(cpu);
+  update(mem);
+
+  fetch('/status')
+  .then(res=>res.text())
+  .then(data=>{
+    document.getElementById("status").innerText = data;
+  });
+
+},2000);
+</script>
+
+</body>
+</html>
+`);
   }
 
   // ---------- AUTH ----------
