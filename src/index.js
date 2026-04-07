@@ -9,158 +9,55 @@ const server = http.createServer((req, res) => {
   if (req.url === "/login") {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     return res.end(`
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>CloudLaunch DevOps</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-body {
-  margin:0;
-  font-family:'Segoe UI';
-  background: linear-gradient(270deg,#0f2027,#203a43,#2c5364);
-  background-size: 600% 600%;
-  animation: bgMove 10s ease infinite;
-  color:white;
-}
-
-@keyframes bgMove {
-  0% {background-position:0% 50%;}
-  50% {background-position:100% 50%;}
-  100% {background-position:0% 50%;}
-}
-
-header {
-  text-align:center;
-  padding:20px;
-  font-size:32px;
-  font-weight:bold;
-  text-shadow:0 0 10px cyan;
-}
-
-.container {
-  width:90%;
-  margin:auto;
-}
-
-.grid {
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:20px;
-}
-
-.card {
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
-  border-radius:15px;
-  padding:20px;
-  box-shadow:0 0 20px rgba(0,255,255,0.2);
-  transition:0.3s;
-}
-
-.card:hover {
-  transform:scale(1.03);
-  box-shadow:0 0 30px cyan;
-}
-
-.status {
-  font-size:20px;
-  color:#00ffcc;
-}
-
-canvas {
-  background:black;
-  border-radius:10px;
-}
-</style>
-
-</head>
-
-<body>
-
-<header>🚀 CloudLaunch DevOps Monitor</header>
-
-<div class="container">
-
-<div class="grid">
-
-<div class="card">
-<h2>👨‍💻 Developer</h2>
-<p>Name: Aishwary</p>
-<p>Reg No: YOUR REG NO</p>
-</div>
-
-<div class="card">
-<h2>🌐 System Status</h2>
-<p class="status" id="status">Checking...</p>
-</div>
-
-<div class="card">
-<h2>📊 CPU Usage</h2>
-<canvas id="cpuChart"></canvas>
-</div>
-
-<div class="card">
-<h2>📊 Memory Usage</h2>
-<canvas id="memChart"></canvas>
-</div>
-
-</div>
-
-</div>
-
-<script>
-const cpu = new Chart(document.getElementById("cpuChart"), {
-  type: 'line',
-  data: {
-    labels: Array(10).fill(""),
-    datasets: [{
-      data: Array(10).fill(50),
-      borderColor: '#00ffcc',
-      tension: 0.4
-    }]
-  },
-  options:{plugins:{legend:{display:false}}}
-});
-
-const mem = new Chart(document.getElementById("memChart"), {
-  type: 'line',
-  data: {
-    labels: Array(10).fill(""),
-    datasets: [{
-      data: Array(10).fill(30),
-      borderColor: '#ffcc00',
-      tension: 0.4
-    }]
-  },
-  options:{plugins:{legend:{display:false}}}
-});
-
-function update(chart){
-  chart.data.datasets[0].data.shift();
-  chart.data.datasets[0].data.push(Math.random()*100);
-  chart.update();
-}
-
-setInterval(()=>{
-  update(cpu);
-  update(mem);
-
-  fetch('/status')
-  .then(res=>res.text())
-  .then(data=>{
-    document.getElementById("status").innerText = data;
-  });
-
-},2000);
-</script>
-
-</body>
-</html>
-`);
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    body {
+      font-family: 'Segoe UI';
+      background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      color:white;
+    }
+    .box {
+      background: rgba(255,255,255,0.1);
+      padding:30px;
+      border-radius:15px;
+      backdrop-filter: blur(10px);
+      text-align:center;
+    }
+    input {
+      padding:10px;
+      margin:10px;
+      width:200px;
+      border:none;
+      border-radius:5px;
+    }
+    button {
+      padding:10px 20px;
+      background:#00c6ff;
+      border:none;
+      border-radius:8px;
+      color:white;
+      cursor:pointer;
+    }
+    </style>
+    </head>
+    <body>
+    <div class="box">
+      <h2>🔐 Admin Login</h2>
+      <form method="POST" action="/auth">
+        <input name="user" placeholder="Username"><br>
+        <input name="pass" type="password" placeholder="Password"><br>
+        <button>Login</button>
+      </form>
+    </div>
+    </body>
+    </html>
+    `);
   }
 
   // ---------- AUTH ----------
@@ -179,7 +76,7 @@ setInterval(()=>{
     return;
   }
 
-  // ---------- ADMIN ----------
+  // ---------- ADMIN PANEL ----------
   if (req.url === "/admin") {
     if (!isLoggedIn) {
       res.writeHead(302, { Location: '/login' });
@@ -187,6 +84,7 @@ setInterval(()=>{
     }
 
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+
     return res.end(`
     <html>
     <head>
@@ -195,28 +93,46 @@ setInterval(()=>{
     <style>
     body {
       font-family: 'Segoe UI';
-      background:#f4f7fb;
-      text-align:center;
-      padding:40px;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    h1 {
+      color: cyan;
+      text-shadow: 0 0 10px cyan;
     }
 
     button {
-      padding:15px;
-      margin:10px;
-      background:#4f46e5;
-      color:white;
-      border:none;
-      border-radius:10px;
-      cursor:pointer;
+      padding: 15px 25px;
+      margin: 15px;
+      background: linear-gradient(45deg,#00c6ff,#0072ff);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px cyan;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
     }
 
     #log {
-      margin-top:20px;
-      background:black;
-      color:lime;
-      padding:15px;
-      height:200px;
-      overflow:auto;
+      margin-top: 20px;
+      background: black;
+      color: lime;
+      padding: 15px;
+      height: 200px;
+      overflow: auto;
       text-align:left;
     }
     </style>
@@ -225,16 +141,16 @@ setInterval(()=>{
 
     <body>
 
-    <h1>🚀 DevOps Control Panel</h1>
+    <h1>⚙️ CONTROL PANEL (ADMIN)</h1>
 
     <button onclick="run('/start')">▶ Start</button>
     <button onclick="run('/stop')">⛔ Stop</button>
     <button onclick="run('/restart')">🔄 Restart</button>
     <button onclick="run('/deploy')">🚀 Deploy</button>
 
-    <h3>Status: <span id="status">Checking...</span></h3>
+    <h3 id="status">Waiting...</h3>
 
-    <div id="log">Logs will appear here...</div>
+    <div id="log">Logs...</div>
 
     <script>
     function run(route){
@@ -246,14 +162,6 @@ setInterval(()=>{
         document.getElementById("log").innerText += "\\n" + data;
       });
     }
-
-    setInterval(()=>{
-      fetch('/status')
-      .then(res=>res.text())
-      .then(data=>{
-        document.getElementById("status").innerText=data;
-      });
-    },3000);
     </script>
 
     </body>
@@ -265,9 +173,9 @@ setInterval(()=>{
   if (req.url === "/status") {
     exec("docker ps -q", (err, stdout) => {
       if (stdout.trim()) {
-        res.end("🟢 Running");
+        res.end("Running");
       } else {
-        res.end("🔴 Stopped");
+        res.end("Stopped");
       }
     });
     return;
@@ -276,34 +184,140 @@ setInterval(()=>{
   // ---------- ACTIONS ----------
   if (req.url === "/stop") {
     exec("docker stop $(docker ps -q)", () => {});
-    return res.end("❌ Stopped");
+    return res.end("❌ Server Stopped");
   }
 
   if (req.url === "/start") {
     exec("docker start $(docker ps -aq)", () => {});
-    return res.end("✅ Started");
+    return res.end("✅ Server Started");
   }
 
   if (req.url === "/restart") {
     exec("docker restart $(docker ps -q)", () => {});
-    return res.end("🔄 Restarted");
+    return res.end("🔄 Server Restarted");
   }
 
   if (req.url === "/deploy") {
-    exec("git pull && docker build -t cloudlaunch . && docker run -d -p 3000:3000 cloudlaunch", () => {});
-    return res.end("🚀 Deployed");
+    exec("git pull && docker stop $(docker ps -q) && docker rm $(docker ps -aq) && docker build -t cloudlaunch . && docker run -d -p 3000:3000 cloudlaunch", () => {});
+    return res.end("🚀 Deployment Done");
   }
 
-  // ---------- MAIN ----------
+  // ---------- DASHBOARD ----------
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
 
   res.end(`
+  <!DOCTYPE html>
   <html>
-  <head><meta charset="UTF-8"></head>
-  <body style="text-align:center;font-family:sans-serif">
-  <h1>🚀 CloudLaunch DevOps App</h1>
-  <p>Live System Running</p>
-  <a href="/login">Go to Admin</a>
+  <head>
+  <meta charset="UTF-8">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+  body {
+    margin:0;
+    font-family:'Segoe UI';
+    background: linear-gradient(270deg,#0f2027,#203a43,#2c5364);
+    color:white;
+  }
+
+  header {
+    text-align:center;
+    padding:20px;
+    font-size:32px;
+    text-shadow:0 0 10px cyan;
+  }
+
+  .grid {
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:20px;
+    padding:20px;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.1);
+    padding:20px;
+    border-radius:15px;
+    backdrop-filter: blur(10px);
+  }
+
+  canvas {
+    background:black;
+    border-radius:10px;
+  }
+  </style>
+
+  </head>
+
+  <body>
+
+  <header>🚀 CloudLaunch DevOps Monitor</header>
+
+  <h3 style="text-align:center;color:#00ffcc;">📊 LIVE MONITORING DASHBOARD</h3>
+
+  <div class="grid">
+
+  <div class="card">
+  <h2>👨‍💻 Developer</h2>
+  <p>Name: Aishwary</p>
+  </div>
+
+  <div class="card">
+  <h2>🌐 System Status</h2>
+  <p id="status">Checking...</p>
+  </div>
+
+  <div class="card">
+  <h2>📊 CPU</h2>
+  <canvas id="cpu"></canvas>
+  </div>
+
+  <div class="card">
+  <h2>📊 Memory</h2>
+  <canvas id="mem"></canvas>
+  </div>
+
+  </div>
+
+  <script>
+  const cpuChart = new Chart(document.getElementById("cpu"), {
+    type:'line',
+    data:{labels:Array(10).fill(""),datasets:[{data:Array(10).fill(50),borderColor:'cyan'}]},
+    options:{plugins:{legend:{display:false}}}
+  });
+
+  const memChart = new Chart(document.getElementById("mem"), {
+    type:'line',
+    data:{labels:Array(10).fill(""),datasets:[{data:Array(10).fill(30),borderColor:'yellow'}]},
+    options:{plugins:{legend:{display:false}}}
+  });
+
+  function update(chart){
+    chart.data.datasets[0].data.shift();
+    chart.data.datasets[0].data.push(Math.random()*100);
+    chart.update();
+  }
+
+  setInterval(()=>{
+    update(cpuChart);
+    update(memChart);
+
+    fetch('/status')
+    .then(res=>res.text())
+    .then(data=>{
+      let el=document.getElementById("status");
+      if(data.includes("Running")){
+        el.innerHTML="🟢 Running";
+        el.style.color="#00ffcc";
+      }else{
+        el.innerHTML="🔴 Stopped";
+        el.style.color="red";
+      }
+    });
+
+  },2000);
+  </script>
+
   </body>
   </html>
   `);
