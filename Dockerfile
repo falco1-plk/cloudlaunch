@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 3000
 
 # Start application
-CMD ["node", "index.js"]
+CMD ["nmp", "start"]
