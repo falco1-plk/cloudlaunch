@@ -12,19 +12,25 @@ const server = http.createServer((req, res) => {
 <html>
 <head>
 <title>Admin Panel</title>
+
 <style>
 body {
   margin:0;
   font-family:'Segoe UI';
-  background: linear-gradient(135deg,#1e3c72,#2a5298);
+  background: linear-gradient(135deg,#141e30,#243b55);
   color:white;
   text-align:center;
 }
 
 h1 {
   margin-top:30px;
+  font-size:40px;
   color:#00ffe0;
   text-shadow:0 0 20px #00ffe0;
+}
+
+.buttons {
+  margin-top:30px;
 }
 
 button {
@@ -49,25 +55,30 @@ button:hover {
 }
 
 .log {
-  margin-top:30px;
+  margin:30px auto;
+  width:80%;
   background:black;
   padding:20px;
   height:200px;
   overflow:auto;
   border-radius:10px;
   color:#00ff00;
+  text-align:left;
 }
 </style>
+
 </head>
 
 <body>
 
 <h1>⚙️ DevOps Control Panel</h1>
 
-<button class="start" onclick="run('/start')">▶ Start</button>
-<button class="stop" onclick="run('/stop')">⛔ Stop</button>
-<button class="restart" onclick="run('/restart')">🔄 Restart</button>
-<button class="deploy" onclick="run('/deploy')">🚀 Deploy</button>
+<div class="buttons">
+  <button class="start" onclick="run('/start')">▶ Start</button>
+  <button class="stop" onclick="run('/stop')">⛔ Stop</button>
+  <button class="restart" onclick="run('/restart')">🔄 Restart</button>
+  <button class="deploy" onclick="run('/deploy')">🚀 Deploy</button>
+</div>
 
 <div class="log" id="log">Logs...</div>
 
@@ -76,7 +87,7 @@ function run(url){
   fetch(url)
   .then(res=>res.text())
   .then(data=>{
-    document.getElementById("log").innerHTML += "<br>" + data;
+    document.getElementById("log").innerHTML += "<br>➤ " + data;
   });
 }
 </script>
@@ -129,7 +140,7 @@ body {
 
 h1 {
   margin-top:20px;
-  font-size:40px;
+  font-size:42px;
   color:#00f2ff;
   text-shadow:0 0 20px #00f2ff;
 }
@@ -139,12 +150,22 @@ h1 {
   margin:auto;
 }
 
+.grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:20px;
+}
+
 .card {
   background: rgba(255,255,255,0.1);
   padding:20px;
-  margin:20px;
   border-radius:15px;
   box-shadow:0 0 20px rgba(0,255,255,0.3);
+}
+
+.status {
+  color:#00ffcc;
+  font-size:20px;
 }
 
 canvas {
@@ -161,41 +182,65 @@ canvas {
 
 <div class="container">
 
+<div class="grid">
+
 <div class="card">
 <h2>👨‍💻 Developer</h2>
 <p>Aishwary</p>
 </div>
 
 <div class="card">
+<h2>🌐 Status</h2>
+<p class="status">Running</p>
+</div>
+
+<div class="card">
 <h2>📊 CPU Usage</h2>
-<canvas id="chart"></canvas>
+<canvas id="cpuChart"></canvas>
+</div>
+
+<div class="card">
+<h2>📊 Memory Usage</h2>
+<canvas id="memChart"></canvas>
+</div>
+
 </div>
 
 </div>
 
 <script>
-const ctx = document.getElementById('chart');
+function createChart(id) {
+  const ctx = document.getElementById(id).getContext('2d');
 
-const chart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: Array(10).fill(""),
-    datasets: [{
-      data: Array(10).fill(50),
-      borderColor: '#00f2ff',
-      tension: 0.4
-    }]
-  },
-  options: {
-    scales: { y: { min: 0, max: 100 } },
-    plugins: { legend: { display: false } }
-  }
-});
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: Array(10).fill(""),
+      datasets: [{
+        data: Array(10).fill(50),
+        borderColor: '#00f2ff',
+        tension: 0.4
+      }]
+    },
+    options: {
+      scales: { y: { min: 0, max: 100 } },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
 
-setInterval(()=>{
+const cpuChart = createChart("cpuChart");
+const memChart = createChart("memChart");
+
+function updateChart(chart) {
   chart.data.datasets[0].data.shift();
   chart.data.datasets[0].data.push(Math.floor(Math.random()*100));
   chart.update();
+}
+
+setInterval(()=>{
+  updateChart(cpuChart);
+  updateChart(memChart);
 },2000);
 </script>
 
@@ -204,7 +249,7 @@ setInterval(()=>{
 `);
 });
 
-// 🔥 IMPORTANT (THIS FIXES YOUR ISSUE)
+// 🔥 IMPORTANT FIX
 server.listen(3000, '0.0.0.0', () => {
   console.log("🚀 Server running on port 3000");
 });
