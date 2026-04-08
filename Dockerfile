@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 3000
 
 # Start application
-CMD ["nmp", "start"]
+CMD ["npm", "start"]
