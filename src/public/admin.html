@@ -6,8 +6,8 @@
 <style>
 body {
     margin:0;
-    font-family:'Segoe UI', sans-serif;
-    background:linear-gradient(135deg,#020617,#1e293b);
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#020617,#1e293b);
     color:white;
     text-align:center;
 }
@@ -17,9 +17,13 @@ h1 {
     color:#22d3ee;
 }
 
-.buttons {
-    margin:30px;
+.status {
+    margin:20px;
+    font-size:18px;
 }
+
+.running { color:#22c55e; }
+.stopped { color:#ef4444; }
 
 button {
     padding:14px 30px;
@@ -28,17 +32,12 @@ button {
     border-radius:10px;
     font-size:16px;
     cursor:pointer;
-    transition:0.3s;
 }
 
 .start { background:#22c55e; }
 .stop { background:#ef4444; }
 .restart { background:#3b82f6; }
 .deploy { background:#f59e0b; }
-
-button:hover {
-    transform:scale(1.1);
-}
 
 .logs {
     width:80%;
@@ -56,7 +55,7 @@ button:hover {
 
 <script>
 function action(cmd){
-    fetch("/"+cmd).then(()=>loadLogs());
+    fetch("/"+cmd).then(()=>loadAll());
 }
 
 function loadLogs(){
@@ -67,23 +66,45 @@ function loadLogs(){
     });
 }
 
-setInterval(loadLogs,2000);
+function loadStatus(){
+    fetch("/status")
+    .then(res=>res.text())
+    .then(data=>{
+        let el = document.getElementById("status");
+        if(data.includes("Up")){
+            el.innerText = "Running";
+            el.className = "status running";
+        } else {
+            el.innerText = "Stopped";
+            el.className = "status stopped";
+        }
+    });
+}
+
+function loadAll(){
+    loadLogs();
+    loadStatus();
+}
+
+setInterval(loadAll,2000);
 </script>
 
 </head>
 
-<body>
+<body onload="loadAll()">
 
 <h1>DevOps Control Panel</h1>
 
-<div class="buttons">
+<div id="status" class="status">Checking...</div>
+
+<div>
     <button class="start" onclick="action('start')">Start</button>
     <button class="stop" onclick="action('stop')">Stop</button>
     <button class="restart" onclick="action('restart')">Restart</button>
     <button class="deploy" onclick="action('deploy')">Deploy</button>
 </div>
 
-<div id="logs" class="logs">System Ready...</div>
+<div id="logs" class="logs">Loading logs...</div>
 
 </body>
 </html>
