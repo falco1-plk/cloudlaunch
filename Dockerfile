@@ -1,20 +1,15 @@
-# Use official Node image
 FROM node:18
 
-# Create app directory inside container
 WORKDIR /app
 
-# Copy package.json first
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy remaining project files
 COPY . .
 
-# Expose port
+# 🔥 INSTALL DOCKER INSIDE CONTAINER
+RUN apt-get update && apt-get install -y docker.io
+
 EXPOSE 3000
 
-# Start application
 CMD ["npm", "start"]
