@@ -1,255 +1,133 @@
 const http = require('http');
 const { exec } = require('child_process');
 
+let logs = "System Ready...\n";
+
+function runCommand(cmd, res) {
+  exec(cmd, (error, stdout, stderr) => {
+    if (error) {
+      logs += "ERROR: " + error.message + "\n";
+    } else {
+      logs += stdout + "\n";
+    }
+    res.end("OK");
+  });
+}
+
 const server = http.createServer((req, res) => {
 
   // ================= ADMIN PANEL =================
   if (req.url === "/admin") {
     res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(`
+    <html>
+    <head>
+      <title>DevOps Control Panel</title>
+      <style>
+        body {
+          font-family: Arial;
+          background: linear-gradient(135deg, #0f172a, #1e293b);
+          color: white;
+          text-align: center;
+          padding: 40px;
+        }
+        h1 {
+          color: #22d3ee;
+        }
+        button {
+          padding: 12px 25px;
+          margin: 10px;
+          border: none;
+          border-radius: 10px;
+          font-size: 16px;
+          cursor: pointer;
+        }
+        .start { background: #22c55e; }
+        .stop { background: #ef4444; }
+        .restart { background: #3b82f6; }
+        .deploy { background: #f59e0b; }
 
-    return res.end(`
-<!DOCTYPE html>
-<html>
-<head>
-<title>Admin Panel</title>
+        .logs {
+          background: black;
+          color: #22c55e;
+          padding: 15px;
+          margin-top: 20px;
+          height: 200px;
+          overflow-y: auto;
+          text-align: left;
+          border-radius: 10px;
+        }
+      </style>
+    </head>
 
-<style>
-body {
-  margin:0;
-  font-family:'Segoe UI';
-  background: linear-gradient(135deg,#141e30,#243b55);
-  color:white;
-  text-align:center;
-}
+    <body>
+      <h1>DevOps Control Panel</h1>
 
-h1 {
-  margin-top:30px;
-  font-size:40px;
-  color:#00ffe0;
-  text-shadow:0 0 20px #00ffe0;
-}
+      <button class="start" onclick="action('start')">Start</button>
+      <button class="stop" onclick="action('stop')">Stop</button>
+      <button class="restart" onclick="action('restart')">Restart</button>
+      <button class="deploy" onclick="action('deploy')">Deploy</button>
 
-.buttons {
-  margin-top:30px;
-}
+      <div class="logs" id="logs">Logs loading...</div>
 
-button {
-  padding:15px 25px;
-  margin:15px;
-  border:none;
-  border-radius:12px;
-  font-size:18px;
-  cursor:pointer;
-  color:white;
-  transition:0.3s;
-}
+      <script>
+        function action(type) {
+          fetch('/' + type).then(() => {
+            loadLogs();
+          });
+        }
 
-.start { background:#22c55e; }
-.stop { background:#ef4444; }
-.restart { background:#3b82f6; }
-.deploy { background:#f59e0b; }
+        function loadLogs() {
+          fetch('/logs')
+          .then(res => res.text())
+          .then(data => {
+            document.getElementById('logs').innerText = data;
+          });
+        }
 
-button:hover {
-  transform:scale(1.1);
-  box-shadow:0 0 20px white;
-}
-
-.log {
-  margin:30px auto;
-  width:80%;
-  background:black;
-  padding:20px;
-  height:200px;
-  overflow:auto;
-  border-radius:10px;
-  color:#00ff00;
-  text-align:left;
-}
-</style>
-
-</head>
-
-<body>
-
-<h1>⚙️ DevOps Control Panel</h1>
-
-<div class="buttons">
-  <button class="start" onclick="run('/start')">▶ Start</button>
-  <button class="stop" onclick="run('/stop')">⛔ Stop</button>
-  <button class="restart" onclick="run('/restart')">🔄 Restart</button>
-  <button class="deploy" onclick="run('/deploy')">🚀 Deploy</button>
-</div>
-
-<div class="log" id="log">Logs...</div>
-
-<script>
-function run(url){
-  fetch(url)
-  .then(res=>res.text())
-  .then(data=>{
-    document.getElementById("log").innerHTML += "<br>➤ " + data;
-  });
-}
-</script>
-
-</body>
-</html>
-`);
+        setInterval(loadLogs, 2000);
+        loadLogs();
+      </script>
+    </body>
+    </html>
+    `);
   }
 
   // ================= COMMANDS =================
-  if (req.url === "/stop") {
-    exec("docker stop $(docker ps -q)");
-    return res.end("❌ Server Stopped");
+  else if (req.url === "/start") {
+    runCommand("docker start cloudlaunch-app", res);
+  }
+  else if (req.url === "/stop") {
+    runCommand("docker stop cloudlaunch-app", res);
+  }
+  else if (req.url === "/restart") {
+    runCommand("docker restart cloudlaunch-app", res);
+  }
+  else if (req.url === "/deploy") {
+    runCommand("git pull && docker restart cloudlaunch-app", res);
   }
 
-  if (req.url === "/start") {
-    exec("docker start $(docker ps -aq)");
-    return res.end("✅ Server Started");
-  }
-
-  if (req.url === "/restart") {
-    exec("docker restart $(docker ps -q)");
-    return res.end("🔄 Server Restarted");
-  }
-
-  if (req.url === "/deploy") {
-    exec("git pull && docker build -t cloudlaunch . && docker run -d -p 3000:3000 cloudlaunch");
-    return res.end("🚀 Deployment Triggered");
+  // ================= LOGS =================
+  else if (req.url === "/logs") {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end(logs);
   }
 
   // ================= DASHBOARD =================
-  res.writeHead(200, { 'Content-Type': 'text/html' });
+  else {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(`
+      <html>
+      <body style="background:#111;color:white;text-align:center;padding:50px;">
+        <h1>CloudLaunch CI/CD is Running</h1>
+        <p>Visit <a href="/admin">Admin Panel</a></p>
+      </body>
+      </html>
+    `);
+  }
 
-  res.end(`
-<!DOCTYPE html>
-<html>
-<head>
-<title>CloudLaunch Dashboard</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-body {
-  margin:0;
-  font-family:'Segoe UI';
-  background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-  color:white;
-  text-align:center;
-}
-
-h1 {
-  margin-top:20px;
-  font-size:42px;
-  color:#00f2ff;
-  text-shadow:0 0 20px #00f2ff;
-}
-
-.container {
-  width:90%;
-  margin:auto;
-}
-
-.grid {
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:20px;
-}
-
-.card {
-  background: rgba(255,255,255,0.1);
-  padding:20px;
-  border-radius:15px;
-  box-shadow:0 0 20px rgba(0,255,255,0.3);
-}
-
-.status {
-  color:#00ffcc;
-  font-size:20px;
-}
-
-canvas {
-  background:black;
-  border-radius:10px;
-}
-</style>
-
-</head>
-
-<body>
-
-<h1>🚀 CloudLaunch DevOps Dashboard</h1>
-
-<div class="container">
-
-<div class="grid">
-
-<div class="card">
-<h2>👨‍💻 Developer</h2>
-<p>Aishwary</p>
-</div>
-
-<div class="card">
-<h2>🌐 Status</h2>
-<p class="status">Running</p>
-</div>
-
-<div class="card">
-<h2>📊 CPU Usage</h2>
-<canvas id="cpuChart"></canvas>
-</div>
-
-<div class="card">
-<h2>📊 Memory Usage</h2>
-<canvas id="memChart"></canvas>
-</div>
-
-</div>
-
-</div>
-
-<script>
-function createChart(id) {
-  const ctx = document.getElementById(id).getContext('2d');
-
-  return new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: Array(10).fill(""),
-      datasets: [{
-        data: Array(10).fill(50),
-        borderColor: '#00f2ff',
-        tension: 0.4
-      }]
-    },
-    options: {
-      scales: { y: { min: 0, max: 100 } },
-      plugins: { legend: { display: false } }
-    }
-  });
-}
-
-const cpuChart = createChart("cpuChart");
-const memChart = createChart("memChart");
-
-function updateChart(chart) {
-  chart.data.datasets[0].data.shift();
-  chart.data.datasets[0].data.push(Math.floor(Math.random()*100));
-  chart.update();
-}
-
-setInterval(()=>{
-  updateChart(cpuChart);
-  updateChart(memChart);
-},2000);
-</script>
-
-</body>
-</html>
-`);
 });
 
-// 🔥 IMPORTANT FIX
-server.listen(3000, '0.0.0.0', () => {
-  console.log("🚀 Server running on port 3000");
+server.listen(3000, () => {
+  console.log("Server running on port 3000");
 });
